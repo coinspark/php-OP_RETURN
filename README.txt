@@ -1,4 +1,4 @@
-php-OP_RETURN v1.0
+php-OP_RETURN v1.0.1
 
 A simple PHP script to generate OP_RETURN bitcoin transactions.
 Please use this responsibly and DO NOT bloat the blockchain!
@@ -54,3 +54,12 @@ USAGE AS A LIBRARY:
 - Returns: array('error' => '[some error string]') OR array('txid' => '[sent txid]')
 
 * Wait a few seconds then check http://coinsecrets.org/ for your OP_RETURN transaction.
+
+
+VERSION HISTORY
+
+v1.0.1 - 3 December 2014
+* Fixed issue when running under 32-bit PHP
+
+v1.0 - 3 October 2014
+* First release

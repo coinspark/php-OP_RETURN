@@ -263,7 +263,10 @@
 	
 	function coinspark_pack_uint64($integer)
 	{
-		return pack('V', $integer%4294967296).pack('V', floor($integer/4294967296));
+		$upper=floor($integer/4294967296);
+		$lower=$integer-$upper*4294967296;
+		
+		return pack('V', $integer%4294967296).pack('V', $upper);
 	}
 	
 
