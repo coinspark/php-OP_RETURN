@@ -3,15 +3,16 @@ php-OP_RETURN v1.0.2
 A simple PHP script to generate OP_RETURN bitcoin transactions.
 Please use this responsibly and DO NOT bloat the blockchain!
 
-Copyright (c) 2014 Coin Sciences Ltd - http://coinspark.org/
+Copyright (c) Coin Sciences Ltd - http://coinspark.org/
 
 MIT License (see headers in files)
 
 
 REQUIREMENTS:
 
+* Unix-based operating system, e.g. Linux or Mac OS X
 * PHP 5.x or later
-* bitcoin-cli installed on the server (does not use JSON-RPC)
+* bitcoin-cli installed (does not use JSON-RPC)
 * Must be run as a user who is permitted to run bitcoin-cli
 
 
@@ -54,6 +55,13 @@ USAGE AS A LIBRARY:
 - Returns: array('error' => '[some error string]') OR array('txid' => '[sent txid]')
 
 * Wait a few seconds then check http://coinsecrets.org/ for your OP_RETURN transaction.
+
+
+WHY NO WINDOWS SUPPORT?
+
+There is an issue on Windows with the escapeshellarg() PHP function. A suitable replacement
+is required which escapes shell argumentes safely and effectively. Alternatively the command
+line execution of bitcoin-cli could be replaced by JSON-RPC calls to Bitcoin Core.
 
 
 VERSION HISTORY
