@@ -59,9 +59,9 @@ USAGE AS A LIBRARY:
 
 WHY NO WINDOWS SUPPORT?
 
-There is an issue on Windows with the escapeshellarg() PHP function. A suitable replacement
-is required which escapes shell argumentes safely and effectively. Alternatively the command
-line execution of bitcoin-cli could be replaced by JSON-RPC calls to Bitcoin Core.
+There is an issue on Windows with the escapeshellarg() PHP function. A suitable
+replacement is required which escapes shell argumentes safely and effectively.
+The command line execution of bitcoin-cli could also be replaced by JSON-RPC calls.
 
 
 VERSION HISTORY
