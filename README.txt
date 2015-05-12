@@ -71,6 +71,7 @@ On the command line:
 * php store-OP_RETURN.php <data> <testnet (optional)>
 
   <data> is a hex string or raw string containing the data to be stored
+         (auto-detection: treated as a hex string if it is a valid one)
   <testnet> should be 1 to use the bitcoin testnet, otherwise it can be omitted
 
 * Outputs an error if one occurred or if successful, the txids that were used to store
@@ -138,7 +139,7 @@ As a library:
                  'ref' => '[best ref for retrieving data]',
                  'error' => '[error if data only partially retrieved]')
            
-           A value of 0 in the 'heights' array means the data is still in the mempool.      
+           A value of 0 in the 'heights' array means some data is still in the mempool.      
            The 'ref' and 'error' elements are only present if appropriate.
                  
 * Examples:
