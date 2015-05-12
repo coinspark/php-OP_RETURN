@@ -1,11 +1,11 @@
 <?php
 
 /*
- * send-OP_RETURN v1.0
+ * send-OP_RETURN.php
  * 
- * CLI wrapper for php-OP_RETURN.php which generates OP_RETURN bitcoin transactions
+ * CLI wrapper for OP_RETURN.php to send bitcoin with OP_RETURN metadata
  *
- * Copyright (c) 2014 Coin Sciences Ltd - http://coinspark.org/
+ * Copyright (c) Coin Sciences Ltd
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@
 	if ($argc<4) {
 		echo <<<HEREDOC
 Usage:
-php send-OP_RETURN.php <send-address> <send-amount> <metadata> <testnet (optional)>'
+php send-OP_RETURN.php <send-address> <send-amount> <metadata> <testnet (optional)>
 
 Examples:
 php send-OP_RETURN.php 149wHUMa41Xm2jnZtqgRx94uGbZD9kPXnS 0.001 'Hello, blockchain!'
@@ -43,12 +43,12 @@ HEREDOC;
 	
 	@list($dummy, $send_address, $send_amount, $metadata, $testnet)=$argv;
 	
-	require 'php-OP_RETURN.php';
+	require 'OP_RETURN.php';
 
 	if (preg_match('/^([0-9A-Fa-f]{2})*$/', $metadata))
-		$metadata=pack('H*', $metadata);
+		$metadata=pack('H*', $metadata); // convert from hex if it looks like hex
 	
-	$result=coinspark_OP_RETURN_send($send_address, $send_amount, $metadata, $testnet);
+	$result=OP_RETURN_send($send_address, $send_amount, $metadata, $testnet);
 	
 	if (isset($result['error']))
 		echo 'Error: '.$result['error']."\n";
