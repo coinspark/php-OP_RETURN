@@ -17,6 +17,7 @@ BEFORE YOU START
 ----------------
 Check the constant settings at the top of OP_RETURN.php.
 If you just installed Bitcoin Core, wait for it to download and verify old blocks.
+If using as a library, include/require 'OP_RETURN.php' in your PHP script file.
 
 
 TO SEND A BITCOIN TRANSACTION WITH SOME OP_RETURN METADATA
@@ -44,8 +45,6 @@ On the command line:
 
 
 As a library:
-
-* Include/require 'OP_RETURN.php' in your PHP script file.
 
 * OP_RETURN_send($send_address, $send_amount, $metadata, $testnet=false)
 
