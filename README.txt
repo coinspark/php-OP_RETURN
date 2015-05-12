@@ -74,8 +74,8 @@ On the command line:
   <data> is a hex string or raw string containing the data to be stored
   <testnet> should be 1 to use the bitcoin testnet, otherwise it can be omitted
 
-* Outputs an error if one occurred or if successful, the txids that were used to store the data
-  and a short reference that can be used to retrieve the data in one piece using this library.
+* Outputs an error if one occurred or if successful, the txids that were used to store
+  the data and a short reference that can be used to retrieve it using this library.
 
 * Wait a few seconds then check http://coinsecrets.org/ for your OP_RETURN transactions.
 
@@ -113,10 +113,10 @@ On the command line:
   <ref> is the reference that was returned by a previous storage operation
   <testnet> should be 1 to use the bitcoin testnet, otherwise it can be omitted
   
-* Outputs an error if one occurred, or if successful, the retrieved data in hexadecimal and ASCII
-  format, a list of the txids that were used to store the data, a list of the blocks in which the
-  data is stored, and (if available) the best ref to retrieve the same data in future. This might
-  be different from the ref you provided and will allow the data to be retrieved quicker.
+* Outputs an error if one occurred or if successful, the retrieved data in hexadecimal
+  and ASCII format, a list of the txids used to store the data, a list of the blocks in
+  which the data is stored, and (if available) the best ref for retrieving the data
+  quickly in future. This may or may not be different from the ref you provided.
   
 * Examples:
 
@@ -129,7 +129,7 @@ As a library:
 * OP_RETURN_retrieve($ref, $max_results=1, $testnet=false)
 
   $ref is the reference that was returned by a previous storage operation
-  $max_results is the maximum number of results to retrieve (in general, omit for the default of 1)
+  $max_results is the maximum number of results to retrieve (in general, omit for 1)
   $testnet is whether to use the bitcoin testnet network (false if omitted)
 
 * Returns: array('error' => '[some error string]')
@@ -153,7 +153,7 @@ VERSION HISTORY
 ---------------
 v2.0 - 12 May 2015
 * Added functions for general storage and retrieval of data in the blockchain
-* Now uses Bitcoin Core's JSON-RPC API (bitcoin-cli still an option), so also supports Windows
+* Now uses Bitcoin Core JSON-RPC API (bitcoin-cli still an option), so supports Windows
 
 v1.0.2 - 9 December 2014
 * Now really fixed that issue (fixed typo in the fix!)
