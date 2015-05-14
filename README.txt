@@ -151,6 +151,9 @@ As a library:
 
 VERSION HISTORY
 ---------------
+v2.0.1 - 14 May 2015
+* More efficient checking of mempool for the first transaction in the chain
+
 v2.0 - 12 May 2015
 * Added functions for general storage and retrieval of data in the blockchain
 * Now uses Bitcoin Core JSON-RPC API (bitcoin-cli still an option), so supports Windows

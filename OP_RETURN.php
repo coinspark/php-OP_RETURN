@@ -211,10 +211,21 @@
 		$results=array();
 		
 		foreach ($heights as $height) {
-			$txns=OP_RETURN_get_height_txns($height, $testnet); // gets from mempool if $height==0
+			if ($height==0) {
+				$txids=OP_RETURN_list_mempool_txns($testnet); // if mempool, only get list for now (to save RPC calls)
+				$txns=null;
+			} else {
+				$txns=OP_RETURN_get_block_txns($height, $testnet); // if block, get all fully unpacked
+				$txids=array_keys($txns);
+			}
 			
-			foreach ($txns as $txid => $txn_unpacked)
+			foreach ($txids as $txid)
 				if (OP_RETURN_match_ref_txid($ref, $txid)) {
+					if ($height==0)
+						$txn_unpacked=OP_RETURN_get_mempool_txn($txid, $testnet);
+					else
+						$txn_unpacked=$txns[$txid];
+						
 					$found=OP_RETURN_find_txn_data($txn_unpacked);
 					
 					if (is_array($found)) {
@@ -231,7 +242,7 @@
 						$key_heights=array($height => true);
 						
 						if ($height==0)
-							$try_heights=array(); // nothing more to do
+							$try_heights=array(); // nowhere else to look if first still in mempool
 						else {
 							$result['ref']=OP_RETURN_calc_ref($height, $txid, array_keys($txns));
 							$try_heights=OP_RETURN_get_try_heights($height+1, $max_height, false);
@@ -239,7 +250,11 @@
 						
 					//	Collect the rest of the data, if appropriate
 						
-						$this_txns=$txns;
+						if ($height==0)
+							$this_txns=OP_RETURN_get_mempool_txns($testnet); // now retrieve all to follow chain
+						else
+							$this_txns=$txns;
+						
 						$last_txid=$txid;
 						$this_height=$height;
 						
@@ -269,7 +284,11 @@
 							} else {
 								if (count($try_heights)) {
 									$this_height=array_shift($try_heights);
-									$this_txns=OP_RETURN_get_height_txns($this_height, $testnet);
+
+									if ($this_height==0)
+										$this_txns=OP_RETURN_get_mempool_txns($testnet);
+									else
+										$this_txns=OP_RETURN_get_block_txns($this_height, $testnet);	
 
 								} else {
 									$result['error']='Data incomplete - could not find next transaction';
@@ -382,15 +401,24 @@
 			return OP_RETURN_get_block_txns($height, $testnet);	
 	}
 	
+	function OP_RETURN_list_mempool_txns($testnet)
+	{
+		return OP_RETURN_bitcoin_cmd('getrawmempool', $testnet);
+	}
+	
+	function OP_RETURN_get_mempool_txn($txid, $testnet)
+	{
+		$raw_txn=OP_RETURN_bitcoin_cmd('getrawtransaction', $testnet, $txid);
+		return OP_RETURN_unpack_txn(pack('H*', $raw_txn));
+	}
+	
 	function OP_RETURN_get_mempool_txns($testnet)
 	{
-		$txids=OP_RETURN_bitcoin_cmd('getrawmempool', $testnet);
+		$txids=OP_RETURN_list_mempool_txns($testnet);
+
 		$txns=array();
-		
-		foreach ($txids as $txid) {
-			$raw_txn=OP_RETURN_bitcoin_cmd('getrawtransaction', $testnet, $txid);
-			$txns[$txid]=OP_RETURN_unpack_txn(pack('H*', $raw_txn));
-		}
+		foreach ($txids as $txid)
+			$txns[$txid]=OP_RETURN_get_mempool_txn($txid, $testnet);
 		
 		return $txns;
 	}
