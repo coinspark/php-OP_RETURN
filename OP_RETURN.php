@@ -56,7 +56,7 @@
 	//	Validate some parameters
 		
 		if (!OP_RETURN_bitcoin_check($testnet))
-			return array('error' => 'Please check OP_RETURN_BITCOIN_* constants is set correctly');
+			return array('error' => 'Please check Bitcoin Core is running and OP_RETURN_BITCOIN_* constants are set correctly');
 
 		$result=OP_RETURN_bitcoin_cmd('validateaddress', $testnet, $send_address);
 		if (!$result['isvalid'])
@@ -113,7 +113,7 @@
 	//	Validate parameters and get change address
 	
 		if (!OP_RETURN_bitcoin_check($testnet))
-			return array('error' => 'Please check OP_RETURN_BITCOIN_* constants is set correctly');
+			return array('error' => 'Please check Bitcoin Core is running and OP_RETURN_BITCOIN_* constants are set correctly');
 			
 		$data_len=strlen($data);
 		if ($data_len==0)
@@ -197,7 +197,7 @@
 	//	Validate parameters and get status of Bitcoin Core
 	
 		if (!OP_RETURN_bitcoin_check($testnet))
-			return array('error' => 'Please check OP_RETURN_BITCOIN_* constants is set correctly');
+			return array('error' => 'Please check Bitcoin Core is running and OP_RETURN_BITCOIN_* constants are set correctly');
 			
 		$max_height=OP_RETURN_bitcoin_cmd('getblockcount', $testnet);
 		$heights=OP_RETURN_get_ref_heights($ref, $max_height);
@@ -428,8 +428,10 @@
 		$block_hash=OP_RETURN_bitcoin_cmd('getblockhash', $testnet, $height);
 		if (strlen($block_hash)!=64)
 			return array('error' => 'Block at height '.$height.' not found');
-			
-		return OP_RETURN_net_get_block(OP_RETURN_BITCOIN_IP, $testnet ? 18333 : 8333, $block_hash, $testnet);
+		
+		return array(
+			'block' => pack('H*', OP_RETURN_bitcoin_cmd('getblock', $testnet, $block_hash, false))
+		);
 	}
 	
 	function OP_RETURN_get_block_txns($height, $testnet)
@@ -922,253 +924,4 @@
 			return ($a==$b) ? 0 : (($a<$b) ? -1 : 1);
 		else
 			return strcasecmp($a, $b); // doesn't do UTF-8 right but it will do for now
-	}
-
-
-//	Functions to retrieve block from blockchain using bitcoin wire protocol
-
-	function OP_RETURN_net_connect($address, $port, &$sock)
-	{
-		if (($sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP)) < 0)
-			return false;
-		
-		if (!(@socket_connect($sock, $address, $port)))
-			return false;
-
-		socket_set_nonblock($sock);
-
-		return true;
-	}
-	
-	function OP_RETURN_net_disconnect($sock)
-	{
-		@socket_close($sock);		
-	}
-
-	function OP_RETURN_net_send($handle,$message_type,$payload)
-	{
-		$hash=hash('sha256',$payload,1);
-		$hash=hash('sha256',$hash,1);
-		
-		$message=$handle->message_start;
-		$message.=str_pad($message_type, 12, "\x00");
-		$message.=pack("V",strlen($payload));
-		$message.=substr($hash,0,4);
-		$message.=$payload;
-		
-		$len=false;
-		$len=socket_send($handle->sock, $message, strlen($message), 0);
-				
-		if (($len === false) || ($len != strlen($message)))
-			return false;
-		
-		return true;
-	}
-	
-	function OP_RETURN_net_receive($handle)
-	{
-		$len=0;
-		
-		$read=array($handle->sock);
-
-		if (socket_select($read, $write = null, $except = null, 0) > 0)
-			foreach ($read as $sock) {
-				$len = socket_recv($sock, $buf, 4096, 0);
-
-				if ($len === false)
-					return false;
-
-				if ($len>0)
-					$handle->receive_buffer.=$buf;
-			}
-		
-		return $len;
-	}
-	
-	function OP_RETURN_net_get_message($handle,&$message_type)
-	{
-		if (strlen($handle->receive_buffer)<24)
-			return null;
-		
-		if (substr($handle->receive_buffer,0,4) != $handle->message_start)
-			return false;
-		
-		$message_type=substr($handle->receive_buffer,4,12);
-		$pos=strpos($message_type,"\x00");
-		if ($pos !== false)
-			$message_type=substr($message_type,0,$pos);
-		
-		$arr=unpack('V', substr($handle->receive_buffer,16,4));
-		$len=$arr[1];
-
-		if (strlen($handle->receive_buffer)<24+$len)
-			return null;
-		
-		$payload="";
-		if ($len > 0) {			
-			$payload=substr($handle->receive_buffer,24,$len);
-
-			$hash=hash('sha256',$payload,1);
-			$hash=hash('sha256',$hash,1);
-
-			if (substr($handle->receive_buffer,20,4) != substr($hash,0,4))
-				return false;
-		}
-		
-		$handle->receive_buffer=substr($handle->receive_buffer,24+$len);
-
-		return $payload;
-	}
-	
-	function OP_RETURN_net_prepare_version($address_arr,$port)
-	{
-		$buf="";
-		
-		$buf.=pack("V",80600);													// version
-		$buf.=pack("V",1).pack("V",0);											// services
-		$buf.=pack("V",time()).pack("V",0);										// timestamp
-		
-		$buf.=pack("V",1).pack("V",0);											// addr recv
-		$buf.=str_repeat("\x00",10)."\xff\xff";									
-		for ($i=0;$i<4;$i++)
-			$buf.=chr($address_arr[$i]);
-		$buf.=chr((int)($port/256)).chr((int)($port%256));
-		$buf.=pack("V",1).pack("V",0);											// addr from
-		$buf.=substr(pack("V",$port),0,2);										
-		$buf.=str_repeat("\x00",10)."\xff\xff".str_repeat("\x00",6);			
-		
-		$buf.=pack("V",time()).pack("V",0);										// nonce
-		$buf.="\x00";															// user agent
-		$buf.=pack("V",0);														// start height
-		$buf.="\x00";															// relay
-
-		return $buf;
-	}
-	
-	function OP_RETURN_net_prepare_getdata($hash)
-	{
-		$buf=chr(1);
-		$buf.=pack("V",2);
-		$buf.=strrev(pack('H*', $hash));
-		
-		return $buf;
-	}
-	
-	function OP_RETURN_net_wait($handle,$success_type,$failure_type)
-	{
-		$len=1;
-		while ($len>0) {
-			$len=OP_RETURN_net_receive($handle);			
-			if ($len === false)
-				return false;
-		}
-		
-		$payload="";
-		while (!is_null($payload)) {			
-			$message_type="unknown";
-			$payload=OP_RETURN_net_get_message($handle, $message_type);
-
-			if ($message_type == $success_type)
-				return $payload;
-
-			if ($message_type == $failure_type)
-				return false;
-		}
-		
-		return null;
-	}
-	
-	function OP_RETURN_net_get_block_start($bitcoin_address, $bitcoin_port, $block_hash_hex, $testnet=false)
-	{
-		$sock=null;
-
-		if (!OP_RETURN_net_connect($bitcoin_address, $bitcoin_port, $sock))
-			return false;
-		
-		$handle = new stdClass();
-		$handle->sock=$sock;
-		$handle->message_start=$testnet ? "\x0B\x11\x09\x07" : "\xF9\xBE\xB4\xD9";
-		$handle->receive_buffer="";
-		$handle->hash=$block_hash_hex;
-		
-		if (!OP_RETURN_net_send($handle, "version", OP_RETURN_net_prepare_version(explode(".", $bitcoin_address), $bitcoin_port)))
-			return false;
-		
-		return $handle;
-	}
-	
-	function OP_RETURN_net_get_block_connect($handle)
-	{
-		$result=OP_RETURN_net_wait($handle, "verack", "reject");
-		
-		if (!is_null($result))
-			if ($result !== false)
-				$result=OP_RETURN_net_send($handle, "getdata", OP_RETURN_net_prepare_getdata($handle->hash));
-		
-		return $result;
-	}
-	
-	function OP_RETURN_net_get_block_check($handle)
-	{
-		return OP_RETURN_net_wait($handle, "block", "notfound");
-	}
-	
-	function OP_RETURN_net_get_block_finish($handle)
-	{
-		OP_RETURN_net_disconnect($handle->sock);
-	}
-	
-	function OP_RETURN_net_get_block($bitcoin_address, $bitcoin_port, $block_hash_hex, $testnet)
-	{
-	
-	//	Connecting to the bitcoin node
-	
-		$handle=OP_RETURN_net_get_block_start($bitcoin_address, $bitcoin_port, $block_hash_hex, $testnet);
-		if ($handle===false)
-			return array('error' => 'Could not connect to bitcoin node to retrieve block');
-	
-	
-	//	Sending the request for the block
-		
-		$start_time=time();
-		$connected=null;
-		while (is_null($connected)) {
-			$connected=OP_RETURN_net_get_block_connect($handle);
-
-			if (is_null($connected)) {
-				if (time()-$start_time < OP_RETURN_NET_TIMEOUT_CONNECT)
-					usleep(100000);
-				else
-					return array('error' => 'Request to bitcoin node to retrieve block timed out');
-			}
-		}
-		
-		if ($connected === false)
-			return array('error' => 'Failed to send block retrieve request to bitcoin node');
-	
-
-	//	Retrieving the block
-	
-		$start_time=time();
-		$block=null;
-		while (is_null($block)) {
-			$block=OP_RETURN_net_get_block_check($handle);
-			
-			if (is_null($block)) {
-				if (time()-$start_time < OP_RETURN_NET_TIMEOUT_RECEIVE)
-					usleep(100000);
-				else
-					return array('error' => 'Retrieving block from bitcoin node timed out');
-			}
-		}
-	
-		if (!$block)
-			return array('error' => 'Could not retrieve the requested block');
-	
-
-	//	Tidying up
-	
-		OP_RETURN_net_get_block_finish($handle);
-	
-		return array('block' => $block);
 	}

@@ -1,5 +1,5 @@
-php-OP_RETURN v2.0
-==================
+php-OP_RETURN v2
+================
 Simple PHP commands and libraries for using OP_RETURNs in bitcoin transactions.
 
 Copyright (c) Coin Sciences Ltd - http://coinsecrets.org/
@@ -151,6 +151,9 @@ As a library:
 
 VERSION HISTORY
 ---------------
+v2.0.2 - 27 June 2015
+* Use Bitcoin Core getblock API to get raw block content instead of wire protocol
+
 v2.0.1 - 14 May 2015
 * More efficient checking of mempool for the first transaction in the chain
 
