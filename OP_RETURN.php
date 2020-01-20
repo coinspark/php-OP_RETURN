@@ -450,7 +450,7 @@
 
 	function OP_RETURN_bitcoin_check($testnet)
 	{
-		$info=OP_RETURN_bitcoin_cmd('getinfo', $testnet);
+		$info=OP_RETURN_bitcoin_cmd('getwalletinfo', $testnet);
 		
 		return is_array($info);
 	}
