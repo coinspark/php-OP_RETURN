@@ -382,7 +382,7 @@
 	
 	function OP_RETURN_sign_send_txn($raw_txn, $testnet)
 	{
-		$signed_txn=OP_RETURN_bitcoin_cmd('signrawtransaction', $testnet, $raw_txn);
+		$signed_txn=OP_RETURN_bitcoin_cmd('signrawtransactionwithwallet', $testnet, $raw_txn);
 		if (!$signed_txn['complete'])
 			return array('error' => 'Could not sign the transaction');
 			
