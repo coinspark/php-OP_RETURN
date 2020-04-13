@@ -484,7 +484,7 @@
 			$user=OP_RETURN_BITCOIN_USER;
 			$password=OP_RETURN_BITCOIN_PASSWORD;
 			
-			if (
+			if ( OP_RETURN_BITCOIN_USE_CMD &&
 				function_exists('posix_getpwuid') &&
 				!(strlen($port) && strlen($user) && strlen($password))
 			) {
